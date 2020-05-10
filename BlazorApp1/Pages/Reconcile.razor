@@ -1,0 +1,82 @@
+﻿@page "/reconcile"
+
+@using BlazorApp1.Data
+@inject WeatherForecastService ForecastService
+@inject TransactionService TransactionService
+@inject BlazorApp1.Models.ReconcileViewModel ViewModel
+
+
+<div class="mdc-form-field" style="margin-bottom:20px;">
+    <div class="mdc-checkbox">
+        <input type="checkbox"
+               class="mdc-checkbox__native-control"
+               id="checkbox-1"
+               @onchange="e => { var showReconciled = (bool)e.Value; RefreshTransactions(showReconciled); }" 
+               disabled="@showReconciledDisabled"/>
+        <div class="mdc-checkbox__background">
+            <svg class="mdc-checkbox__checkmark"
+                 viewBox="0 0 24 24">
+                <path class="mdc-checkbox__checkmark-path"
+                      fill="none"
+                      d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+            </svg>
+            <div class="mdc-checkbox__mixedmark"></div>
+        </div>
+        <div class="mdc-checkbox__ripple"></div>
+    </div>
+    <label for="checkbox-1" style="margin-bottom: 0">Show reconciled transactions</label>
+</div>
+
+@if (transactions == null || bankTransactions == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col">
+            <div class="mdc-typography--headline6">Match system transactions... </div>
+
+            @foreach (var transaction in transactions.OrderBy(x => x.IsReconciled).ThenBy(x => x.Id))
+            {
+                <Transaction TransactionData="transaction" ViewModel="ViewModel" />
+            }
+        </div>
+
+        <div class="col">
+            <div class="mdc-typography--headline6">... with bank transactions</div>
+            <BankTransactionList Transactions="bankTransactions" ViewModel="ViewModel" />
+        </div>
+    </div>
+}
+
+@code {
+    private IEnumerable<BlazorApp1.Models.Transaction> transactions;
+    private IEnumerable<BlazorApp1.Models.Transaction> bankTransactions;
+    private BlazorApp1.Models.ReconcileViewModel viewModel;
+    private bool showReconciledDisabled = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        transactions = await TransactionService.GetTransactionsAsync(false);
+        bankTransactions = await TransactionService.GetBankTransactionsAsync(false);
+
+        showReconciledDisabled = false;
+
+        ViewModel.OnChange += StateHasChanged;
+    }
+
+    private async void RefreshTransactions(bool showReconciled)
+    {
+        showReconciledDisabled = true;
+        transactions = null;
+        bankTransactions = null;
+
+        transactions = await TransactionService.GetTransactionsAsync(showReconciled);
+        bankTransactions = await TransactionService.GetBankTransactionsAsync(showReconciled);
+        showReconciledDisabled = false;
+        StateHasChanged();
+    }
+
+
+}

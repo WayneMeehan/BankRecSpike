@@ -1,0 +1,51 @@
+﻿@if (TransactionData != null)
+{
+    <tr class="@backgroundClass">
+        @if (ViewModel.SelectedTransaction != null && !TransactionData.IsReconciled)
+        {
+            <td class="mdc-data-table__cell mdc-data-table__cell--checkbox">
+                <div class="mdc-checkbox mdc-data-table__row-checkbox">
+                    <input type="checkbox" class="mdc-checkbox__native-control" aria-labelledby="u0" 
+                           @onchange="(e) => {var selected = (bool)e.Value; SelectClick(selected); }" />
+                    <div class="mdc-checkbox__background">
+                        <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+                            <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+                        </svg>
+                        <div class="mdc-checkbox__mixedmark"></div>
+                    </div>
+                </div>
+            </td>
+        }
+        else
+        {
+            <td class="mdc-data-table__cell"></td>
+        }
+        <td class="mdc-data-table__cell">@TransactionData.Id</td>
+        <td class="mdc-data-table__cell">@TransactionData.Date.ToString("dd MMM")</td>
+        <td class="mdc-data-table__cell">@TransactionData.Description</td>
+        <td class="mdc-data-table__cell">@TransactionData.Reference</td>
+        <td class="mdc-data-table__cell mdc-data-table__cell--numeric">@TransactionData.Amount</td>
+    </tr>
+}
+
+@code {
+    [Parameter]
+    public BlazorApp1.Models.Transaction TransactionData { get; set; }
+
+    [Parameter]
+    public BlazorApp1.Models.ReconcileViewModel ViewModel { get; set; }
+
+    private string backgroundClass => TransactionData.IsReconciled ? "reconciled-transaction" : "";
+
+    private void SelectClick(bool selected)
+    {
+        if (selected)
+        {
+            ViewModel.AddSelectedBankTransaction(TransactionData);
+        }
+        else
+        {
+            ViewModel.RemoveSelectedBankTransaction(TransactionData);
+        }
+    }
+}
